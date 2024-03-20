@@ -1,0 +1,11 @@
+FROM ubuntu:18.04
+COPY ./release/oimi-live-linux-amd64 /app/
+COPY ./config.yml /app/
+COPY ./ffmpeg /app/
+# 授权ffmpeg 执行权限
+workdir /app
+CMD chmod +x /app/ffmpeg
+CMD chmod +x oimi-live-linux-amd64
+EXPOSE 8881
+
+ENTRYPOINT ["./oimi-live-linux-amd64"]

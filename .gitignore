@@ -2,3 +2,6 @@
 go_http/my-http
 .idea
 .vscode
+*.zip
+*.log
+**/release/**

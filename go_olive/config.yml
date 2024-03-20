@@ -1,0 +1,2 @@
+ffmpeg: "./ffmpeg"
+port: 8881
