@@ -5,3 +5,6 @@ go_http/my-http
 *.zip
 *.log
 **/release/**
+*.mp4
+ffprobe
+ffmpeg

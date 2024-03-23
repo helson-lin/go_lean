@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -37,6 +38,15 @@ func Includes[T comparable](slice []T, value T) bool {
 		}
 	}
 	return false
+}
+
+// 判断条件
+func Or[T comparable](isTrue bool, result1 T, result2 T) T {
+	if isTrue {
+		return result1
+	} else {
+		return result2
+	}
 }
 
 func GetOsArch() string {
@@ -82,9 +92,9 @@ func InstallFFmpeg(component string) (string, error) {
 	baseDir := "dep"
 	osType := runtime.GOOS
 	if osType == "windows" {
-		libPath = baseDir + "/ffmpeg.exe"
+		libPath = baseDir + Or(component == "FFMPEG", "/ffmpeg.exe", "/ffprobe.exe")
 	} else {
-		libPath = baseDir + "/ffmpeg"
+		libPath = baseDir + Or(component == "FFMPEG", "/ffmpeg", "/ffprobe")
 	}
 	// 如果libPath存在文件并且有权限直接返回
 	isPass, err := IsExecutable(libPath)
@@ -93,7 +103,8 @@ func InstallFFmpeg(component string) (string, error) {
 	}
 	// 不存在直接继续
 	fileName := component + "-4.4.1-" + GetOsArch() + ".zip"
-	downloadPath := registry["qiniu"] + "/" + fileName
+	downloadPath := registry["github"] + "/" + fileName
+	fmt.Println(downloadPath)
 	if err := DownloadFile(fileName, downloadPath); err != nil {
 		return "", err
 	} else {
@@ -110,9 +121,14 @@ func InstallFFmpeg(component string) (string, error) {
 }
 
 // 获取本机的env内的ffmpeg的地址
-func GetLocalEnvFFmpeg() string {
-	ffmpegPath := os.Getenv("FFMPEG")
-	return ffmpegPath
+func GetLocalEnvFFmpeg(libName string) string {
+	if libName == "FFMPEG" {
+		ffmpegPath := os.Getenv("FFMPEG")
+		return ffmpegPath
+	} else {
+		ffprobePath := os.Getenv("FFPROBE")
+		return ffprobePath
+	}
 }
 
 func DownloadFile(filepath string, url string) error {
@@ -221,4 +237,25 @@ func IsExecutable(filename string) (bool, error) {
 	// 检查所有用户的可执行权限
 	isExec := mode&0111 != 0
 	return isExec, nil
+}
+
+// CopyAndLog copies data from the src to dst and logs the data being copied.
+// Note: This is a simplified example. In a real-world scenario, you might need to customize it further.
+func CopyAndLog(src io.Reader, prefix string) {
+	buf := make([]byte, 1024)
+	for {
+		n, err := src.Read(buf)
+		if n > 0 {
+			// Log the data chunk that was successfully read.
+			log.Printf("%s: %s", prefix, string(buf[:n]))
+		}
+		if err != nil {
+			if err == io.EOF {
+				break // End of file means we're done.
+			}
+			// Log any error other than EOF.
+			log.Printf("%s: error reading data: %v", prefix, err)
+			break
+		}
+	}
 }
